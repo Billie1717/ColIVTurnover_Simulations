@@ -1,0 +1,1 @@
+Open plotting scripts in jupyter notebook and change path to data folder in cell 1 of each notebook

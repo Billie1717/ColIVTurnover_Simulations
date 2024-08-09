@@ -4,7 +4,7 @@ All the simulations are analysed either using graph analysis, as in the python n
 
 The stress output and number of bonds broken/made is read directly from the lammps output thermo.dat.
 
-## AdjacencyMatrix.ipynb
+## GraphAnalysis.ipynb
 
 <ins>Description</ins>
 
