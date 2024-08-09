@@ -16,7 +16,7 @@ Many protomers are simulated in a molecular dynamics simulation using LAMMPS (ht
 
 Building the correct Lammps version and replacing certain cpp source codes with the edited versions
 
-<ins>Main_mmodel:</ins>
+<ins>Main_model:</ins>
 
 The files required to run the simulations and a simplified commented input script. There is also a description in 'readme' of the useful outputs that this lammps script will produce.
 

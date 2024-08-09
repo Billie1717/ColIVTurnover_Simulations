@@ -27,13 +27,13 @@ Because the command fix create and fix break for bonds in lammps shouldn't be us
 
 The turnover is always measured by sampling the network topoligy from the bonds. Therefore, the main other useful output from lammps is the stress in the x- and y- directions, so that the stress-relaxation can be measured. The following commands can be found in the lammps input script:
 
-compute totalStressX all reduce sum c_perAtomStress[1]
-compute totalStressY all reduce sum c_perAtomStress[2]
+    compute totalStressX all reduce sum c_perAtomStress[1]
+    compute totalStressY all reduce sum c_perAtomStress[2]
 
-variable StressX equal c_totalStressX
-variable StressY equal c_totalStressY
+    variable StressX equal c_totalStressX
+    variable StressY equal c_totalStressY
 
-fix		fix_print all print ${thermodump} "${step} ${etot} ${ke} ${peBond} ${peAngle} ${temp} ${press} ${StressX} ${StressY} ${StressZ} ${Fbond}" file ${thermofile} screen no title "step etot ke peBond peAngle temp press stressX stressY stressZ AvBondForce"
+    fix		fix_print all print ${thermodump} "${step} ${etot} ${ke} ${peBond} ${peAngle} ${temp} ${press} ${StressX} ${StressY} ${StressZ} ${Fbond}" file ${thermofile} screen no title "step etot ke peBond peAngle temp press stressX stressY stressZ AvBondForce"
 
 So that the xx and yy components of the stress tensor are outputted in 'thermo.dat' which we read out for each time point in each simulation.
 
