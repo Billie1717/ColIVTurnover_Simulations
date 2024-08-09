@@ -1,10 +1,10 @@
 # Analysis scripts
 
-All the simulations are analysed either using graph analysis, as in the python notebook, or using 'MoleculeAngle.py' or 'Histrogram_Types.py'.
+All the simulations are analysed either using graph analysis, as in the python notebook, or using 'MoleculeAngle.py'.
 
 The stress output and number of bonds broken/made is read directly from the lammps output thermo.dat.
 
-AdjacencyMatrix.ipynb
+## AdjacencyMatrix.ipynb
 
 <ins>Description</ins>
 
@@ -27,15 +27,3 @@ Where filename is .../dumplin/lammpsT.000
 fileout is name of the output file
 NumMols is the number of protomers in your simulation
   
-    
-## Histrogram_Types.py 
-    
-<ins>Description</ins> 
-
-Outputs a histogram of particle types from an input with multiple timesteps (uses the Ovito module, https://www.ovito.org/docs/current/python/)
-
-<ins>Usage</ins> 
-
-python Histrogram_Types.py ${filepattern0} ${fileOut}
-
-filepattern0 is whole folder in which multiple timeteps are contained 

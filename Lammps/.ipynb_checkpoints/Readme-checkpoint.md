@@ -1,3 +1,5 @@
+## Lammps version and building
+
 From the lammps downloads:
 
 https://download.lammps.org/tars/
@@ -15,7 +17,7 @@ make yes-molecule
 make yes-reaction
 make yes-MC
 
-# Files edited in folder /src
+## Files edited in folder /src
 
 For making and breaking bonds:
 
