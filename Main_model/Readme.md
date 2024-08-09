@@ -22,3 +22,5 @@ The file input.in is complete and should be able to be run with the correct lamm
 
 Because the command fix create and fix break for bonds in lammps shouldn't be used simultaneously, the main point to note is that the code requires bonds to be make and broken separately, with type-IDs of atoms being updated in between. These cycles have to be short enough so that atoms types can be updated sufficiently frequently without a single atom bonding more than once. This makes the lammps input script very long as it may have 100s of cycles of breaking and making bonds. 
 
+
+## Outputs

@@ -11,7 +11,7 @@ Building the correct Lammps version and replacing certain cpp source codes with 
 
 <ins>Main_mmodel:</ins>
 
-The files required to run the simulations and a simplified commented input script.
+The files required to run the simulations and a simplified commented input script. There is also a description in 'readme' of the useful outputs that this lammps script will produce.
 
 <ins>Inputs_trajectories:</ins>
 
