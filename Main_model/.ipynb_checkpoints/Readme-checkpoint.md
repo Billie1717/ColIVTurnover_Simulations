@@ -6,7 +6,7 @@ The model is run in lammps and uses the REACTION package. The reactions allow th
 
 To change types depending on bonding, it is required to specify many atom templates which singles out atoms bonded in a certain way and changes their type accordingly. These are contained in the folder /templates. This folder is essential and must be kept in the same directory as the lammps input file (and lammps initial data file) for the simulations to run.
 
-## initial conditions
+## randomising initial conditions
 
 The files lseed.dat and vseed.dat contain random numbers which set the initial random lengevin thermostat and initial random velocity, respectivly.
 
@@ -25,7 +25,7 @@ Because the command fix create and fix break for bonds in lammps shouldn't be us
 
 ## Outputs
 
-The turnover is always measured by sampling the network topoligy from the bonds. Therefore, the main other useful output from lammps is the stress in the x- and y- directions, so that the stress-relaxation can be measured. The following commands can be found in the lammps input script:
+The turnover is always measured by sampling the network topology from the bonds. Therefore, the main other useful output from lammps is the stress in the x- and y- directions, so that the stress-relaxation can be measured. The following commands can be found in the lammps input script:
 
     compute totalStressX all reduce sum c_perAtomStress[1]
     compute totalStressY all reduce sum c_perAtomStress[2]
