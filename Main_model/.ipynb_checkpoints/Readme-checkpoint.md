@@ -12,7 +12,7 @@ The files lseed.dat and vseed.dat contain random numbers which set the initial r
 
 ## inital data file
 
-The file 'data' contains the lammps data file which forms a grid of non-bonded protomers all of type 1 and 2 in a simulation box 72x72x12. This example has 3125 protomers, 6250 atoms. 
+The file 'data' contains the lammps data file which for these simulations is an equilibrated bonded network in a simulation box 51x51x13. This example has 3165 protomers, 6330 atoms. 
 
 ## input file
 
@@ -24,3 +24,16 @@ Because the command fix create and fix break for bonds in lammps shouldn't be us
 
 
 ## Outputs
+
+The turnover is always measured by sampling the network topoligy from the bonds. Therefore, the main other useful output from lammps is the stress in the x- and y- directions, so that the stress-relaxation can be measured. The following commands can be found in the lammps input script:
+
+compute totalStressX all reduce sum c_perAtomStress[1]
+compute totalStressY all reduce sum c_perAtomStress[2]
+
+variable StressX equal c_totalStressX
+variable StressY equal c_totalStressY
+
+fix		fix_print all print ${thermodump} "${step} ${etot} ${ke} ${peBond} ${peAngle} ${temp} ${press} ${StressX} ${StressY} ${StressZ} ${Fbond}" file ${thermofile} screen no title "step etot ke peBond peAngle temp press stressX stressY stressZ AvBondForce"
+
+So that the xx and yy components of the stress tensor are outputted in 'thermo.dat' which we read out for each time point in each simulation.
+

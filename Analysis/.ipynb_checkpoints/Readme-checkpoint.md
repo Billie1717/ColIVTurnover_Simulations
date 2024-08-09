@@ -8,7 +8,7 @@ The stress output and number of bonds broken/made is read directly from the lamm
 
 <ins>Description</ins>
 
-Contains an example of the use of the graph analysis. The second cell contains the graph analysis definitions, which take as inputs the bond topology files
+Contains an example of the use of the graph analysis. The second cell contains the graph analysis definitions, which take as inputs the bond topology files. 
     
 <ins>Usage</ins>
 

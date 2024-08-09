@@ -2,46 +2,54 @@
 #PARAMETERS
 
 #NUMBER OF STEPS OF RUNS (stages)
-variable tmix			equal 	1e4	#NVT steps for molecule mixing
-variable tbonds			equal 	1e5	#NVT steps for bond equilibration
+variable tmix			equal 	1e4	#NVT steps for molecule mixing -- actually this step is skipped here but could be included if starting from grid of atoms
+variable tbonds			equal 	1e6	#NVT steps for bond equilibration -- actually this step is skipped here but could be included if starting from grid of atoms
 variable tstretch			equal 	1e4	#NVT steps for stretching
-variable trelax			equal 	5e5	#NVT steps for post stretch relaxation
+variable tsampleTop			equal 	1e3	#NVT steps for sampling bond topology 
+variable NevSample			equal 	20	# sample every this many NVT  steps during sampling
+variable NtotSample			equal 	100	#This number of total samples taken in the whole run
+variable Tbetween			equal 	$(floor(((v_tbonds)/(v_NtotSample)-v_tsampleTop)/2))	#NVT steps between each sample (where we don't dump so frequently)
+variable trelax			equal 	0	#NVT steps for post stretch relaxation
 
 
 #THERMODYNAMIC PARAMETERS
 variable mytemp         equal 	1.0	    	#Temperature
 
 #INFORMATION PRINTING PERIODS
-variable ttotal     equal   $(v_tmix+v_tbonds+v_trelax+v_tstretch)		#total timesteps
+variable ttotal     equal   $(v_tmix+v_tbonds+v_tstretch)		#total timesteps #v_trelax
 variable thermodump     equal   $(floor(v_ttotal/5e4))		#Thermo info dump period
 variable trajdump       equal   $(floor(v_ttotal/500))    	#Config info dump period
 variable trestart       equal   $(floor(v_ttotal/100))    	#Restart configuration saving period
-variable tcycleMB   equal   $(floor((v_tbonds)/200))    	#Restart configuration saving period
-variable tcycleRel   equal   $(floor((v_trelax)/1000))    	#Restart configuration saving period
+variable tcycleMB   equal   $(floor((v_tbonds)/200))    	#run time for each bond-equilibrating cycle
+variable tcycleRel   equal   $(floor((v_trelax)/200))    	#run time for each relaxation stage cycle
 
 #OTHER SIMULATION PARAMETERS
-variable tstep        	equal   0.01   	#Integration time step for first part of simulation
+variable tstep        	equal   0.01   	#Integration time step 
 variable damp   		equal   0.1	   	#Langevin thermostat damping coefficient [F_friction = -(m/damp)*v]
 variable neigh_cutoff	equal	0.4  		#Neighbor list cutoff
 variable lj_cutoff      equal   1.122462	#For WCA: 1.122462048 
 #variable comm_cutoff	equal   5. 			#Ghost cutoff
 
 
-variable k_nc1			equal	6.0 		#Elastic constant A type bond
-variable r0_nc1			equal	0.5 		#Rest length A type bond
+variable k_nc1			equal	6.0 		#Elastic constant nc1 type bond
+variable r0_nc1			equal	0.5 		#Rest length nc1 type bond
 
-variable k_7s			equal	6.0 		#Elastic constant B type bond
-variable r0_7s			equal	0.5 		#Rest length B type bond
+variable k_7s			equal	6.0 		#Elastic constant 7s type bond
+variable r0_7s			equal	0.5 		#Rest length 7s type bond
 
-variable ChemBond			equal	100.0 		#Rest length B type bond
-
-variable prob	equal 	0.1	#Breaking probability
-variable cutoff	equal 	4.675427526732803	#Breaking probability
+variable break_prob_nc1	equal   0.01				#Probability to break a bond
+variable make_prob_nc1	equal   0.03				#Probability to create a bond
+variable make_dist_nc1  	equal 	$(v_r0_nc1*1.3) 	#Bonding distance
+variable break_dist_nc1  	equal 	$(v_r0_nc1*2.4) 	#Breaking distance
 variable max_bonds_nc1	equal   1 				#Max. number of bonds of type A that each particle can form
 variable nevery_Cr		equal	500 				#Attempt bond creation every "nevery" time steps
-variable nevery_Cr2		equal	1 				#Attempt bond creation every "nevery" time steps
+variable nevery_Cr2		equal	1 				#Attempt bond creation every "nevery" time steps (for creating bonded trimers)
 variable nevery_Br		equal	500 				#Attempt bond breakage every "nevery" time steps
 #7S bonds (3 per molecule)
+variable break_prob_7s	equal   0.01				#Probability to break a bond
+variable make_prob_7s	equal   0.03				#Probability to create a bond
+variable make_dist_7s  	equal 	$(v_r0_nc1*1.3) 	#Bonding distance
+variable break_dist_7s  	equal 	$(v_r0_nc1*2.4) 	#Breaking distance
 variable max_bonds_7s	equal   3				#Max. number of bonds of type A that each particle can form
 variable zero_cutoff    equal   6.0				#Cutoff for zero potential; must be larger that max bonding distance 
 
@@ -57,7 +65,7 @@ variable simname 		string 	run_T${mytemp}	#name of this simulation
 #####################################################
 #INITALIZATION
 units           lj          	#use lj units
-boundary        p p f       	#periodic boundary conditions
+boundary        p p f       	#periodic boundary conditions, fixed lj wall in z
 atom_style     	molecular
 
 #BOND STYLE: 
@@ -70,8 +78,8 @@ angle_style      harmonic
 pair_style		lj/cut 1.0
 
 #Starting from an initial configuration WITHOUT BONDS (format lammpsdata):
-read_data       ${fname} extra/bond/types 2 extra/bond/per/atom 10 extra/special/per/atom 100 extra/angle/types 2 extra/angle/per/atom 20
-#read_restart restart.postmix
+read_data       ${fname} 
+#read_restart ${fname}
 reset_timestep  0
 
 #GROUPS
@@ -97,7 +105,7 @@ neighbor		${neigh_cutoff} bin 		#value = skin = extra distance beyond cutoff
 neigh_modify	every 10 delay 0 check yes
 
 #PAIR STYLE (WCA)
-pair_style     	hybrid/overlay lj/cut 1.0 zero 1.0
+pair_style     	hybrid/overlay lj/cut 1.0 zero 1.0 #No interactions, no volume exclusion. Need neighbour lists and cutoffs for bond creation
 pair_coeff      * * lj/cut 0.0 0.0 ${lj_cutoff}
 #pair_modify     pair lj/cut shift yes
 pair_coeff      * * zero ${zero_cutoff}
@@ -297,6 +305,7 @@ molecule            mPosttetramer2Bb2 templates/7sbreaking/tetramer/post_tetrame
 molecule            mPretetramerb4 templates/7sbreaking/tetramer/pre_tetramer_four.txt
 molecule            mPosttetramerb4 templates/7sbreaking/tetramer/post_tetramer_four.txt
 
+
 #COMPUTE BOND PROPERTIES
 compute 		1 all property/local batom1 batom2 btype
 compute 		4 all property/local atype aatom1 aatom2 aatom3
@@ -342,6 +351,7 @@ variable C_bonds_nc1 equal 0
 variable C_bonds_nc1_Cu equal 0
 variable C_bonds_7s1 equal 0
 variable C_bonds_7s2 equal 0
+
 variable C_bonds_7s3 equal 0
 variable C_bonds_7s4 equal 0
 variable C_bonds_7s5 equal 0
@@ -360,8 +370,6 @@ velocity 	all create ${mytemp} ${vseed} dist gaussian mom yes rot yes
 run 0
 velocity	all scale ${mytemp}
 
-#Printing especially to output how many bonds are broken and made at each thermostep. There are multiple types for making 7s bonds to count up.
-
 fix		fix_print all print ${thermodump} "${step} ${etot} ${ke} ${peBond} ${peAngle} ${temp} ${press} ${StressX} ${StressY} ${StressZ} ${Fbond} ${C_bonds_nc1} ${C_bonds_nc1_Cu} ${C_bonds_7s1} ${C_bonds_7s2} ${C_bonds_7s3} ${C_bonds_7s4} ${C_bonds_7s5} ${C_bonds_7s_Cu1} ${C_bonds_7s_Cu2} ${C_bonds_7s_Cu3} ${C_bonds_7s_Cu4} ${C_bonds_7s_Cu5} ${B_bonds_nc1} ${B_bonds_nc1_Cu} ${B_bonds_7s} ${B_bonds_7s_Cu}" file ${thermofile} screen no title "step etot ke peBond peAngle temp press stressX stressY stressZ AvBondForce CreateNC1 CumuCreateNC1 Create7s1 Create7s2 Create7s3 Create7s4 Create7s5 CumuCreate7s1 CumuCreate7s2 CumuCreate7s3 CumuCreate7s4 CumuCreate7s5 BreakNC1 CumuBreakNC1 Break7s CumuBreak7s"
 
 #Save configurations in linear time
@@ -375,17 +383,14 @@ dump 		3 all local ${trajdump} dumplin_bonds/bonds.${simname}.* index c_1[1] c_1
 dump_modify	3 format line "%d %0.0f %0.0f %0.0f"
 dump_modify	3 pad 10
 
-
 restart         ${trestart} restart/${simname}.*.restart
 
-run ${tmix} ### MIXING THE PROTOMERS BEFORE BONDS ARE MADE
+#run ${tmix} #if needed, pre bond-making mixing of protomers
 
-write_restart	restart.postmix
+#write_restart	restart.postmix
 
 neigh_modify exclude molecule/inter 7s_trimer
 reset_atoms mol 7s
-
-# The reactions for type changes :
 
 fix             freact all bond/react stabilization no reset_mol_ids no &
                 react rdimer all 1 0.900000 3.300000 mPredimer mPostdimer templates/dimer/map_dimer.txt prob 1.0 ${lseed} &
@@ -484,6 +489,7 @@ fix             freact all bond/react stabilization no reset_mol_ids no &
 
 
 #### STARTING HERE ... Rounds of making and breaking bonds, so that the types have a chance to changhe in between 
+## Also note two run commands run		${tsampleTop} and run		${Tbetween} where the frequency of bond dumping changes for each. Within tsampleTop bonds are dumped frequently so the monomer turnover can be sampled correctly.
 
 special_bonds lj 0.0 1.0 1.0
 reset_atoms mol 7s
@@ -491,12 +497,13 @@ group 7s_trimer  type 4
 group 7s_tetramer  type 6 7
 neigh_modify exclude molecule/inter 7s_trimer 
 neigh_modify exclude molecule/inter 7s_tetramer 
-fix 		fix_bonds_nc1 	nc1 bond/create  ${nevery_Cr} 1 1 ${cutoff} 2 iparam ${max_bonds_nc1} 1 jparam ${max_bonds_nc1} 1 prob ${prob} 49829 atype 1 equilib ${r0_nc1} ${k_nc1} ${ChemBond}
-fix 		fix_bonds_7s	7s 	bond/create  ${nevery_Cr} 2 2 ${cutoff} 3 iparam ${max_bonds_7s} 7 jparam ${max_bonds_7s} 7 prob ${prob} 29829 atype 2 equilib ${r0_7s} ${k_7s} ${ChemBond}
-fix 		fix_bonds_7s_2	7s bond/create  ${nevery_Cr} 2 3 ${cutoff} 3 iparam ${max_bonds_7s} 7 jparam ${max_bonds_7s} 7 prob ${prob} 29829 atype 2 equilib ${r0_7s} ${k_7s} ${ChemBond}
-fix 		fix_bonds_7s_3	7s bond/create ${nevery_Cr2} 4 4 ${cutoff} 3 iparam ${max_bonds_7s} 7 jparam ${max_bonds_7s} 7 prob ${prob} 29829 atype 2 equilib ${r0_7s} ${k_7s} ${ChemBond}
-fix 		fix_bonds_7s_4	7s bond/create  ${nevery_Cr} 2 5 ${cutoff} 3 iparam ${max_bonds_7s} 2 jparam ${max_bonds_7s} 5 prob ${prob} 29829 atype 2 equilib ${r0_7s} ${k_7s} ${ChemBond}
-fix 		fix_bonds_7s_5	7s bond/create  ${nevery_Cr2} 6 6 ${cutoff} 3 iparam ${max_bonds_7s} 6 jparam ${max_bonds_7s} 6 prob ${prob} 29829 atype 2 equilib ${r0_7s} ${k_7s} ${ChemBond}
+fix 		fix_bonds_nc1 	nc1 bond/create  ${nevery_Cr} 1 1 ${make_dist_nc1} 2 iparam ${max_bonds_nc1} 1 jparam ${max_bonds_nc1} 1 prob ${make_prob_nc1} 49829 atype 1 
+fix 		fix_bonds_7s	7s 	bond/create  ${nevery_Cr} 2 2 ${make_dist_7s} 3 iparam ${max_bonds_7s} 7 jparam ${max_bonds_7s} 7 prob ${make_prob_7s} 29829 atype 2 
+fix 		fix_bonds_7s_2	7s bond/create  ${nevery_Cr} 2 3 ${make_dist_7s} 3 iparam ${max_bonds_7s} 7 jparam ${max_bonds_7s} 7 prob ${make_prob_7s} 29829 atype 2 
+fix 		fix_bonds_7s_3	7s bond/create ${nevery_Cr2} 4 4 ${make_dist_7s} 3 iparam ${max_bonds_7s} 7 jparam ${max_bonds_7s} 7 prob ${make_prob_7s} 29829 atype 2 
+fix 		fix_bonds_7s_4	7s bond/create  ${nevery_Cr} 2 5 ${make_dist_7s} 3 iparam ${max_bonds_7s} 2 jparam ${max_bonds_7s} 5 prob ${make_prob_7s} 29829 atype 2 
+fix 		fix_bonds_7s_5	7s bond/create  ${nevery_Cr2} 6 6 ${make_dist_7s} 3 iparam ${max_bonds_7s} 6 jparam ${max_bonds_7s} 6 prob ${make_prob_7s} 29829 atype 2 
+
 
 variable C_bonds_nc1 equal f_fix_bonds_nc1[1]
 variable C_bonds_nc1_Cu equal f_fix_bonds_nc1[2]
@@ -516,7 +523,19 @@ variable B_bonds_7s equal 0
 variable B_bonds_7s_Cu equal 0
 
 
-run		${tcycleMB}
+run		${Tbetween}
+
+#Sample with fast dumping for bond topology changes
+dump 		4 all local ${NevSample} dumplin_bondsSample/bonds.${simname}.* index c_1[1] c_1[2] c_1[3] #bond index, id of atom 1 and 2 in the bond, bond type
+dump_modify	4 format line "%d %0.0f %0.0f %0.0f"
+dump_modify	4 pad 10
+
+run		${tsampleTop}
+
+undump 4
+
+run		${Tbetween}
+
 unfix fix_bonds_nc1
 unfix fix_bonds_7s
 unfix fix_bonds_7s_2
@@ -524,8 +543,8 @@ unfix fix_bonds_7s_3
 unfix fix_bonds_7s_4
 unfix fix_bonds_7s_5
 
-fix 		fix_bonds_break_nc1 	nc1 bond/break  ${nevery_Br} 2 0.0 prob ${prob} 49829 equilib ${r0_nc1} ${k_nc1} ${ChemBond}
-fix 		fix_bonds_break_7s 	7s bond/break  ${nevery_Br} 3 0.0 prob ${prob} 49825 equilib ${r0_7s} ${k_7s} ${ChemBond}
+fix 		fix_bonds_break_nc1 	nc1 bond/break  ${nevery_Br} 2 ${break_dist_nc1} prob ${break_prob_nc1} 49829
+fix 		fix_bonds_break_7s 	7s bond/break  ${nevery_Br} 3 ${break_dist_nc1} prob ${break_prob_7s} 49825
 
 variable C_bonds_nc1 equal 0
 variable C_bonds_nc1_Cu equal 0
@@ -544,46 +563,21 @@ variable B_bonds_nc1_Cu equal f_fix_bonds_break_nc1[2]
 variable B_bonds_7s equal f_fix_bonds_break_7s[1]
 variable B_bonds_7s_Cu equal f_fix_bonds_break_7s[2]
 
-run ${tcycleMB}
+run		${Tbetween}
+
+#Sample with fast dumping for bond topology changes
+dump 		4 all local ${NevSample} dumplin_bondsSample/bonds.${simname}.* index c_1[1] c_1[2] c_1[3] #bond index, id of atom 1 and 2 in the bond, bond type
+dump_modify	4 format line "%d %0.0f %0.0f %0.0f"
+dump_modify	4 pad 10
+
+run		${tsampleTop}
+
+undump 4
+
+run		${Tbetween}
     
 unfix fix_bonds_break_nc1
 unfix fix_bonds_break_7s
 
-#### ENDING HERE ... This repeats many times! ::
-
-#... lots of cycles xxx
- 
-## When enough cycles for making a network, we run: ::
-
-write_restart	restart.postmakebonds
-fix                    fDeform all deform 1 x delta -54.0 54.0 remap x
-
-    
-variable C_bonds_nc1 equal 0
-variable C_bonds_nc1_Cu equal 0
-variable C_bonds_7s1 equal 0
-variable C_bonds_7s2 equal 0
-variable C_bonds_7s3 equal 0
-variable C_bonds_7s4 equal 0
-variable C_bonds_7s5 equal 0
-variable C_bonds_7s_Cu1 equal 0
-variable C_bonds_7s_Cu2 equal 0
-variable C_bonds_7s_Cu3 equal 0
-variable C_bonds_7s_Cu4 equal 0
-variable C_bonds_7s_Cu5 equal 0
-variable B_bonds_nc1 equal 0
-variable B_bonds_nc1_Cu equal 0
-variable B_bonds_7s equal 0
-variable B_bonds_7s_Cu equal 0
-    
-run                    ${tstretch}
-unfix                  fDeform
-write_restart	restart.poststretch
-
-
-## then repeat the above unit for many cycles (between STARTS HERE and ENDS HERE)
-
-## then 
-
-write_restart	restart.postrelax
+write_data	data.*
     
