@@ -1,0 +1,31 @@
+molecule template: pre dimer type change
+
+     7 atoms
+     6 bonds
+     4 angles
+
+Types
+
+    1 1
+    2 3
+    3 3
+    4 1
+    5 2
+    6 1
+    7 1
+
+Bonds
+
+    1 1 1 2
+    2 1 3 4
+    3 1 5 6
+    4 3 2 3
+    5 3 3 5
+    6 2 6 7
+    
+Angles
+
+    1 2 1 2 3
+    2 2 4 3 2
+    3 2 6 5 3
+    4 1 5 6 7

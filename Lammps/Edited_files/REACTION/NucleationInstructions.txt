@@ -1,0 +1,29 @@
+OPTIONS:
+
+nuc mod X 
+nuc string X
+where X > 1
+
+Positions and orientations given in lines ~3833
+
+if string ==yes
+flag == 1
+X = nothing
+
+if string == xor
+flag == 0
+X = nothing
+
+if string == mod
+flag = X (>1)
+X = distribution width of angles
+
+if string == xwalls
+flag = X (<-1)
+if X == -2, both walls, if X == -3, one wall
+
+if string == aster
+flag > 2 (flag = pole-pole distance)
+
+if string == aster2nd
+flag < -3 (flag = (-) pole-pole distance of first asters)

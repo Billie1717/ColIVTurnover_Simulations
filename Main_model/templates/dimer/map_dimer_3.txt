@@ -1,0 +1,15 @@
+map file: styrene growth
+
+4 equivalences
+
+InitiatorIDs
+
+2
+3
+
+Equivalences
+
+1  1
+2  2
+3  3
+4  4
